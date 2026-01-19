@@ -64,15 +64,17 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
     setIsBookingMode,
   } = useHotelsStore();
 
-  const isDesktop = useMediaQuery("(min-width: 640px)");
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const isTablet = useMediaQuery("(min-width: 768px) and (max-width: 1023px)");
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [isPanelVisible, setIsPanelVisible] = React.useState(true);
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
   React.useEffect(() => {
-    if (isDesktop && !isPanelVisible) {
+    if ((isDesktop || isTablet) && !isPanelVisible) {
       setIsPanelVisible(true);
     }
-  }, [isDesktop, isPanelVisible]);
+  }, [isDesktop, isTablet, isPanelVisible]);
 
   const getListings = () => {
     switch (mode) {
@@ -115,27 +117,50 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
   }
 
   return (
-    <div className="absolute left-4 top-4 bottom-4 z-20 flex flex-col bg-background rounded-xl shadow-xl border overflow-hidden w-80 sm:w-[420px]">
-      <div className="p-3 border-b flex items-center justify-between">
+    <div className={cn(
+      "absolute left-4 top-4 bottom-4 z-20 flex flex-col bg-background rounded-xl shadow-xl border overflow-hidden",
+      // Luxury responsive sizing - reduction not compression
+      isMobile ? "w-[calc(100vw-2rem)]" : // Full width minus margins on mobile
+      isTablet ? "w-80" : // Medium on tablet
+      "w-[420px]" // Full on desktop
+    )}>
+      <div className={cn(
+        "border-b flex items-center justify-between",
+        // Luxury typography - airier on mobile
+        isMobile ? "p-4" : "p-3"
+      )}>
         <div>
-          <h2 className="font-semibold text-base">
+          <h2 className={cn(
+            "font-semibold",
+            // Luxury typography - larger on mobile, shorter content
+            isMobile ? "text-lg" : "text-base"
+          )}>
             {mode === "favorites" ? "Favorites" : "All Hotels"}
           </h2>
-          <p className="text-xs text-muted-foreground">
-            {listings.length}{" "}
-            {listings.length === 1 ? "hotel" : "hotels"}
-          </p>
+          {/* Hide count on mobile for cleaner look */}
+          {!isMobile && (
+            <p className="text-xs text-muted-foreground">
+              {listings.length}{" "}
+              {listings.length === 1 ? "hotel" : "hotels"}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-1">
-          <SidebarTrigger className="size-7" />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 sm:hidden"
-            onClick={() => setIsPanelVisible(false)}
-          >
-            <X className="size-4" />
-          </Button>
+          {/* Hide sidebar trigger on mobile unless in booking mode */}
+          {(!isMobile || isBookingMode) && (
+            <SidebarTrigger className="size-7" />
+          )}
+          {/* Mobile close button only on mobile */}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={() => setIsPanelVisible(false)}
+            >
+              <X className="size-5" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -289,7 +314,11 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
                       "border-primary shadow-lg ring-2 ring-primary/20"
                   )}
                 >
-                  <div className="relative aspect-4/3 overflow-hidden">
+                  <div className={cn(
+                    "relative overflow-hidden",
+                    // Luxury principle: Images become primary on mobile
+                    isMobile ? "aspect-[4/5]" : "aspect-4/3" // Taller images on mobile
+                  )}>
                     <Carousel className="h-full w-full">
                       <CarouselContent className="h-full">
                         {listing.images.map((image, imageIndex) => (
@@ -307,8 +336,13 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
                           </CarouselItem>
                         ))}
                       </CarouselContent>
-                      <CarouselPrevious className="left-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
-                      <CarouselNext className="right-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
+                      {/* Hide carousel controls on mobile for cleaner look */}
+                      {!isMobile && (
+                        <>
+                          <CarouselPrevious className="left-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
+                          <CarouselNext className="right-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
+                        </>
+                      )}
                     </Carousel>
                     <div className="absolute top-2 right-2 z-10">
                       <Button
@@ -342,59 +376,87 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
                     )}
 
                   </div>
-                  <div className="p-3">
+                  <div className={cn(
+                    // Luxury typography - airier on mobile
+                    isMobile ? "p-4" : "p-3"
+                  )}>
                     <div className="mb-1 flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm mb-1 truncate">
+                        <h3 className={cn(
+                          "font-semibold mb-1 truncate",
+                          // Luxury typography - larger on mobile
+                          isMobile ? "text-base" : "text-sm"
+                        )}>
                           {listing.title}
                         </h3>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                          <MapPin className="h-3 w-3" />
+                        <div className={cn(
+                          "flex items-center gap-1 text-muted-foreground mb-1",
+                          // Luxury typography - larger on mobile
+                          isMobile ? "text-sm" : "text-xs"
+                        )}>
+                          <MapPin className={cn(
+                            // Luxury touch - larger tap targets on mobile
+                            isMobile ? "h-4 w-4" : "h-3 w-3"
+                          )} />
                           <span className="truncate">
                             {listing.city}, {listing.country}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 mb-2 text-xs">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">
-                          {listing.rating.toFixed(1)}
-                        </span>
+                    {/* Progressive disclosure - hide secondary info on mobile */}
+                    {!isMobile && (
+                      <div className="flex items-center gap-3 mb-2 text-xs">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">
+                            {listing.rating.toFixed(1)}
+                          </span>
+                          <span className="text-muted-foreground">
+                            ({listing.reviewCount})
+                          </span>
+                        </div>
+                        <span className="text-muted-foreground">•</span>
                         <span className="text-muted-foreground">
-                          ({listing.reviewCount})
+                          {roomTypeLabels[listing.roomType]}
                         </span>
                       </div>
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-muted-foreground">
-                        {roomTypeLabels[listing.roomType]}
-                      </span>
-                    </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-base font-semibold">
+                        <span className={cn(
+                          "font-semibold",
+                          // Luxury typography - larger on mobile
+                          isMobile ? "text-lg" : "text-base"
+                        )}>
                           KES {listing.pricePerNight.toLocaleString()}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className={cn(
+                          "text-muted-foreground",
+                          // Luxury typography - larger on mobile
+                          isMobile ? "text-sm" : "text-xs"
+                        )}>
                           {" "}
                           / night
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        {listing.beds > 0 && (
-                          <span>
-                            {listing.beds} bed
-                            {listing.beds > 1 ? "s" : ""}
-                          </span>
-                        )}
-                        {listing.guests > 0 && (
-                          <span>
-                            • {listing.guests} guest
-                            {listing.guests > 1 ? "s" : ""}
-                          </span>
-                        )}
-                      </div>
+                      {/* Progressive disclosure - hide capacity info on mobile */}
+                      {!isMobile && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {listing.beds > 0 && (
+                            <span>
+                              {listing.beds} bed
+                              {listing.beds > 1 ? "s" : ""}
+                            </span>
+                          )}
+                          {listing.guests > 0 && (
+                            <span>
+                              • {listing.guests} guest
+                              {listing.guests > 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {isSelected && (
                       <div className="mt-3 pt-3 border-t">
