@@ -1,0 +1,112 @@
+# NOKRAS HOTELS – TRANSFORMATION PROGRESS LOG
+
+Legend:
+[ ] Pending
+- [x] Define project vision: Transform rental explorer into unified hotel management system
+- [x] Identify four hotels: Nokras Muranga, SilverOak, Enkare, Sagana
+- [x] Establish staff-operated concierge model (no self-booking)
+- [x] Create conceptual domain model (Hotel → Room/Suite)
+
+## Domain Model Transformation
+- [x] Create new data models for hotels and rooms
+- [x] Replace PropertyType enum with hotel-specific room types
+- [x] Update mock data to represent hotel rooms instead of generic rentals
+- [x] Implement hotel-room parent-child relationship
+- [ ] Add hotel-level metadata (location, description, amenities, theme accents)
+
+## Data Structure Updates
+- [ ] Update mock-data/listings.ts to hotel-room structure
+- [ ] Create hotel definitions with unique identities
+- [ ] Generate realistic room data for each hotel (20-30 rooms per hotel)
+- [ ] Update TypeScript interfaces in store/rentals-store.ts
+- [ ] Implement hotel clustering logic for map markers
+
+## Store and State Management
+- [x] Implement detailed guest filtering with children and ages
+- [ ] Rename and refactor Zustand store to hotel-centric terminology
+- [ ] Update filtering logic for hotel-room hierarchy
+- [ ] Modify sorting options for hotel context
+- [ ] Implement hotel selection and room browsing states
+- [ ] Update favorites system for rooms within hotels
+
+## Map Experience Redesign
+- [x] Set initial map view to Kenya
+- [ ] Change markers to represent hotels instead of individual rooms
+- [ ] Implement hotel overview popups with "From KES X/night"
+- [ ] Add hotel clustering visualization
+- [ ] Update map controls and interactions
+- [ ] Implement drill-down to room selection within hotel view
+
+## Navigation Structure Updates
+- [ ] Update sidebar navigation to hotel-centric structure
+- [ ] Create dedicated pages for each hotel (Muranga, SilverOak, Enkare, Sagana)
+- [ ] Implement "All Hotels" dashboard view
+- [ ] Update breadcrumbs and navigation hierarchy
+- [ ] Add concierge workspace placeholder
+
+## UI/UX Language Changes
+- [ ] Replace rental terminology with hotel language throughout
+- [ ] Update component labels and descriptions
+- [x] Change pricing display to KES currency
+- [ ] Implement subtle theme variations per hotel
+- [ ] Update search placeholders and filter labels
+
+## Content and Branding
+- [x] Update logo to use Nokras logo.png
+- [ ] Create unique hotel identities and descriptions
+- [ ] Generate hotel-specific imagery and themes
+- [ ] Develop room naming conventions (Deluxe, Executive, Suite, etc.)
+- [ ] Add hotel-level amenities (spa, restaurant, business center, etc.)
+- [ ] Implement brand-consistent visual language
+
+## Component Updates
+- [ ] Update listings-panel.tsx for hotel-room display
+- [ ] Modify map-view.tsx for hotel markers and popups
+- [ ] Refactor sidebar.tsx with hotel navigation
+- [ ] Update map-controls.tsx for hotel context
+- [ ] Implement hotel-specific styling and theming
+
+## Responsive Design Adaptation
+- [ ] Ensure mobile experience works with hotel-first navigation
+- [ ] Test map interactions on different screen sizes
+- [ ] Verify hotel selection and room browsing on mobile
+- [ ] Optimize hotel overview cards for small screens
+
+## Technical Implementation
+- [ ] Update all TypeScript types and interfaces
+- [ ] Refactor component props and state management
+- [ ] Update API/data fetching patterns for hotel structure
+- [ ] Implement proper error handling for hotel operations
+- [ ] Add loading states for hotel data
+
+## Testing and Validation
+- [ ] Test hotel selection and room filtering
+- [ ] Verify map clustering and marker interactions
+- [ ] Test navigation between hotels and rooms
+- [ ] Validate responsive behavior across devices
+- [ ] Performance testing with 100+ room dataset
+
+## Documentation Updates
+- [ ] Update README.md with hotel system description
+- [ ] Add hotel-specific setup and configuration notes
+- [ ] Document concierge workflow integration points
+- [ ] Update component documentation
+- [ ] Create hotel branding guidelines
+
+## Future Integration Points
+- [ ] Prepare structure for concierge booking system
+- [ ] Add room availability calendar integration
+- [ ] Implement guest management placeholders
+- [ ] Add booking assignment workflow hooks
+- [ ] Prepare API endpoints for future backend integration
+
+## Success Criteria Validation
+- [ ] All four hotels clearly differentiated but cohesive
+- [ ] Map instantly communicates Nokras hotel locations
+- [ ] Rooms feel premium and hotel-branded
+- [ ] System feels internal, professional, and deliberate
+- [ ] Performance meets requirements for 100+ rooms
+
+---
+*Progress: 12/50 tasks completed (24%)*
+*Last updated: 2026-01-19*
