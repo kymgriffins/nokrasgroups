@@ -48,7 +48,7 @@ type GuestInfo = {
 };
 
 const navItems = [
-  { id: "all", title: "All Hotels", icon: Home, href: "/" },
+  { id: "all", title: "Nokras Hotels", icon: Home, href: "/" },
   { id: "favorites", title: "Favorites", icon: Heart, href: "/favorites" },
 ];
 

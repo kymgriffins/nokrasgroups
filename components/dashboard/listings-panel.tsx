@@ -161,7 +161,7 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
             // Luxury typography - larger on mobile, shorter content
             isMobile ? "text-lg" : "text-base"
           )}>
-            {isShowingRooms ? getFilteredHotels().find(h => h.id === selectedHotelId)?.name : (mode === "favorites" ? "Favorites" : "All Hotels")}
+            {isShowingRooms ? getFilteredHotels().find(h => h.id === selectedHotelId)?.name : (mode === "favorites" ? "Favorites" : "Nokras Hotels")}
           </h2>
           {/* Hide count on mobile for cleaner look */}
           {!isMobile && (
