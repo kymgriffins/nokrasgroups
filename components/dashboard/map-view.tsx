@@ -156,39 +156,48 @@ export function MapView() {
 
         if (!mapRef.current) return;
 
+        // Responsive popup sizing based on viewport
+        const isMobile = window.innerWidth < 768;
+        const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+        const popupMaxWidth = isMobile ? "320px" : isTablet ? "360px" : "400px";
+        const imageHeight = isMobile ? "h-48" : "h-64";
+        const textSize = isMobile ? "text-sm" : "text-base";
+        const titleSize = isMobile ? "text-sm" : "text-base";
+        const padding = isMobile ? "px-3 pb-3" : "px-4 pb-4";
+
         const popupContent = `
           <div class="listing-popup-content">
-            <div class="relative w-full h-64 mb-4 rounded-t-lg overflow-hidden">
-              <img 
-                src="${listing.images[0]}" 
+            <div class="relative w-full ${imageHeight} mb-3 sm:mb-4 rounded-t-lg overflow-hidden">
+              <img
+                src="${listing.images[0]}"
                 alt="${listing.title}"
                 class="w-full h-full object-cover"
                 onerror="this.src='https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&h=400&fit=crop'"
               />
-              <button 
-                class="close-popup-btn absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm hover:bg-white flex items-center justify-center transition-all shadow-md hover:shadow-lg z-10"
+              <button
+                class="close-popup-btn absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-sm hover:bg-white flex items-center justify-center transition-all shadow-md hover:shadow-lg z-10"
                 aria-label="Close"
               >
-                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div class="px-4 pb-4">
+            <div class="${padding}">
               <div class="flex items-start justify-between mb-2">
                 <div class="flex-1 min-w-0">
-                  <h3 class="font-semibold text-base mb-1">${
+                  <h3 class="font-semibold ${titleSize} mb-1 truncate">${
                     roomTypeLabels[listing.roomType]
                   } • ${listing.city}</h3>
-                  <p class="text-sm text-muted-foreground mb-2 line-clamp-2">${
+                  <p class="${textSize} text-muted-foreground mb-2 line-clamp-2">${
                     listing.title
                   }</p>
                 </div>
                 <div class="flex items-center gap-1 ml-2 shrink-0">
-                  <svg class="w-4 h-4 fill-yellow-400 text-yellow-400" viewBox="0 0 20 20">
+                  <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
-                  <span class="text-sm font-medium">${listing.rating.toFixed(
+                  <span class="${textSize} font-medium">${listing.rating.toFixed(
                     1
                   )}</span>
                   <span class="text-xs text-muted-foreground">(${
@@ -196,7 +205,7 @@ export function MapView() {
                   })</span>
                 </div>
               </div>
-              <div class="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+              <div class="flex items-center gap-2 ${textSize} text-muted-foreground mb-2 sm:mb-3">
                 ${
                   listing.beds > 0
                     ? `<span>${listing.beds} bed${listing.beds > 1 ? "s" : ""}</span>`
@@ -214,10 +223,10 @@ export function MapView() {
                 }
               </div>
               <div class="flex items-baseline gap-2">
-                <span class="text-xl font-semibold">KES ${
+                <span class="text-lg sm:text-xl font-semibold">KES ${
                   listing.pricePerNight.toLocaleString()
                 }</span>
-                <span class="text-sm text-muted-foreground">/ night</span>
+                <span class="text-xs sm:text-sm text-muted-foreground">/ night</span>
               </div>
             </div>
           </div>
@@ -255,7 +264,7 @@ export function MapView() {
           closeButton: false,
           closeOnClick: false,
           className: "listing-popup",
-          maxWidth: "400px",
+          maxWidth: popupMaxWidth,
         })
           .setLngLat([listing.coordinates.lng, listing.coordinates.lat])
           .setHTML(popupContent)

@@ -147,14 +147,29 @@
 .listing-popup .maplibregl-popup-content {
   background-color: var(--background) !important;
   padding: 0 !important;
-  border-radius: 24px !important;
+  border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2),
     0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  min-width: 320px;
+  min-width: 280px;
   max-width: 400px;
-  width: 400px;
+  width: 100%;
   cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .listing-popup .maplibregl-popup-content {
+    min-width: 280px;
+    max-width: 320px;
+    border-radius: 12px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .listing-popup .maplibregl-popup-content {
+    min-width: 320px;
+    max-width: 360px;
+  }
 }
 
 .listing-popup .maplibregl-popup-tip {

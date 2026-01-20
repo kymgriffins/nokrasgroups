@@ -37,9 +37,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { BookingModal } from "@/components/dashboard/booking-modal";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 type PanelMode = "all" | "favorites";
 
@@ -49,6 +49,7 @@ interface ListingsPanelProps {
 
 export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const {
     selectedListingId,
     selectedHotelId,
@@ -75,14 +76,6 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [isPanelVisible, setIsPanelVisible] = React.useState(true);
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
-  const [bookingModalOpen, setBookingModalOpen] = React.useState(false);
-  const [selectedHotelForBooking, setSelectedHotelForBooking] = React.useState<{
-    hotelName: string;
-    city: string;
-    country: string;
-    image: string;
-    availableRooms: Listing[];
-  } | null>(null);
 
   React.useEffect(() => {
     if ((isDesktop || isTablet) && !isPanelVisible) {
@@ -133,18 +126,7 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
   };
 
   const handleBookNow = (listing: Listing) => {
-    // Group all listings from the same hotel
-    const allListings = getFilteredListings();
-    const hotelListings = allListings.filter(l => l.hotel.name === listing.hotel.name);
-
-    setSelectedHotelForBooking({
-      hotelName: listing.hotel.name,
-      city: listing.city,
-      country: listing.country,
-      image: listing.images[0],
-      availableRooms: hotelListings,
-    });
-    setBookingModalOpen(true);
+    router.push(`/payment?listingId=${listing.id}`);
   };
 
   if (!isPanelVisible) {
@@ -216,52 +198,87 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
       </div>
 
       {isBookingMode && (
-        <div className="p-2 border-b">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <div className={cn(
+          "border-b",
+          isMobile ? "p-3" : "p-2"
+        )}>
+          <div className={cn(
+            "flex items-center gap-2",
+            isMobile ? "flex-col gap-2" : ""
+          )}>
+            <div className="relative flex-1 w-full">
+              <Search className={cn(
+                "absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground",
+                isMobile ? "size-3.5" : "size-4"
+              )} />
               <Input
                 placeholder="Search hotels..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn("pl-8 h-9", searchQuery && "pr-8")}
+                className={cn(
+                  isMobile ? "pl-8 h-9 text-sm" : "pl-8 h-9",
+                  searchQuery && "pr-8"
+                )}
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 size-7"
+                  className={cn(
+                    "absolute right-1 top-1/2 -translate-y-1/2",
+                    isMobile ? "size-6" : "size-7"
+                  )}
                   onClick={() => setSearchQuery("")}
                 >
-                  <X className="size-3.5" />
+                  <X className={cn(
+                    isMobile ? "size-3" : "size-3.5"
+                  )} />
                 </Button>
               )}
             </div>
-            <div className="flex items-center gap-1 rounded-lg border p-0.5">
+            <div className={cn(
+              "flex items-center gap-1 rounded-lg border p-0.5",
+              isMobile ? "w-full justify-center" : ""
+            )}>
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="icon"
-                className="h-7 w-7"
+                className={cn(
+                  isMobile ? "h-8 w-8 flex-1" : "h-7 w-7"
+                )}
                 onClick={() => setViewMode("list")}
               >
-                <List className="h-3.5 w-3.5" />
+                <List className={cn(
+                  isMobile ? "h-3.5 w-3.5" : "h-3.5 w-3.5"
+                )} />
               </Button>
               <Button
                 variant={viewMode === "grid" ? "default" : "ghost"}
                 size="icon"
-                className="h-7 w-7"
+                className={cn(
+                  isMobile ? "h-8 w-8 flex-1" : "h-7 w-7"
+                )}
                 onClick={() => setViewMode("grid")}
               >
-                <Grid3x3 className="h-3.5 w-3.5" />
+                <Grid3x3 className={cn(
+                  isMobile ? "h-3.5 w-3.5" : "h-3.5 w-3.5"
+                )} />
               </Button>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-9 shrink-0">
-                  <ArrowUpDown className="size-4" />
+                <Button variant="outline" size="icon" className={cn(
+                  "shrink-0",
+                  isMobile ? "size-9 w-full" : "size-9"
+                )}>
+                  <ArrowUpDown className={cn(
+                    isMobile ? "size-3.5" : "size-4"
+                  )} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align={isMobile ? "start" : "end"} className={cn(
+                isMobile ? "w-[calc(100vw-3rem)]" : "w-48"
+              )}>
                 <DropdownMenuItem
                   onClick={() => setSortBy("price-low")}
                   className="gap-2"
@@ -836,17 +853,7 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
         )}
       </div>
 
-      {selectedHotelForBooking && (
-        <BookingModal
-          hotelName={selectedHotelForBooking.hotelName}
-          city={selectedHotelForBooking.city}
-          country={selectedHotelForBooking.country}
-          image={selectedHotelForBooking.image}
-          availableRooms={selectedHotelForBooking.availableRooms}
-          isOpen={bookingModalOpen}
-          onClose={() => setBookingModalOpen(false)}
-        />
-      )}
+      {/* Booking now routes to /payment; keep modal component for potential reuse elsewhere */}
     </div>
   );
 }
