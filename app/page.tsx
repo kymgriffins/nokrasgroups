@@ -4,12 +4,10 @@ import { MapView } from "@/components/dashboard/map-view";
 import { ListingsPanel } from "@/components/dashboard/listings-panel";
 import { MapControls } from "@/components/dashboard/map-controls";
 
-export default function HotelsPage() {
+export default function HomePage() {
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <div className="absolute inset-0 w-full h-full bg-blue-500 flex items-center justify-center text-white text-2xl">
-        Map Placeholder
-      </div>
+    <div className="relative h-screen w-full overflow-hidden">
+      <MapView />
       <ListingsPanel />
       <MapControls />
     </div>

@@ -8,6 +8,7 @@ import {
   Star,
   MapPin,
   ArrowUpDown,
+  ArrowLeft,
   Check,
   Grid3x3,
   List,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { useHotelsStore } from "@/store/hotels-store";
 import { type Listing, roomTypeLabels } from "@/mock-data/listings";
+import { type HotelLocation } from "@/mock-data/locations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +37,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { BookingModal } from "@/components/dashboard/booking-modal";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 
@@ -49,14 +51,18 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const {
     selectedListingId,
+    selectedHotelId,
     searchQuery,
     sortBy,
     selectListing,
+    selectHotel,
     toggleFavorite,
     setSearchQuery,
     setSortBy,
     getFilteredListings,
     getFavoriteListings,
+    getFilteredHotels,
+    getRoomTypesForHotel,
     setMapCenter,
     setMapZoom,
     setUserLocation,
@@ -69,6 +75,14 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [isPanelVisible, setIsPanelVisible] = React.useState(true);
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+  const [bookingModalOpen, setBookingModalOpen] = React.useState(false);
+  const [selectedHotelForBooking, setSelectedHotelForBooking] = React.useState<{
+    hotelName: string;
+    city: string;
+    country: string;
+    image: string;
+    availableRooms: Listing[];
+  } | null>(null);
 
   React.useEffect(() => {
     if ((isDesktop || isTablet) && !isPanelVisible) {
@@ -76,16 +90,31 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
     }
   }, [isDesktop, isTablet, isPanelVisible]);
 
-  const getListings = () => {
-    switch (mode) {
-      case "favorites":
-        return getFavoriteListings();
-      default:
-        return getFilteredListings();
+  const getItems = () => {
+    if (selectedHotelId) {
+      // Show rooms for selected hotel
+      const selectedHotel = getFilteredHotels().find(h => h.id === selectedHotelId);
+      return selectedHotel ? getRoomTypesForHotel(selectedHotel.name) : [];
+    } else {
+      // Show hotels
+      switch (mode) {
+        case "favorites":
+          return getFavoriteListings().reduce((hotels: HotelLocation[], listing) => {
+            const hotel = hotels.find(h => h.name === listing.hotel.name);
+            if (!hotel) {
+              const hotelData = getFilteredHotels().find(h => h.name === listing.hotel.name);
+              if (hotelData) hotels.push(hotelData);
+            }
+            return hotels;
+          }, []);
+        default:
+          return getFilteredHotels();
+      }
     }
   };
 
-  const listings = getListings();
+  const items = getItems();
+  const isShowingRooms = selectedHotelId !== null;
 
   React.useEffect(() => {
     if (selectedListingId && scrollContainerRef.current) {
@@ -101,6 +130,21 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
       setMapCenter(listing.coordinates);
       setMapZoom(14);
     }
+  };
+
+  const handleBookNow = (listing: Listing) => {
+    // Group all listings from the same hotel
+    const allListings = getFilteredListings();
+    const hotelListings = allListings.filter(l => l.hotel.name === listing.hotel.name);
+
+    setSelectedHotelForBooking({
+      hotelName: listing.hotel.name,
+      city: listing.city,
+      country: listing.country,
+      image: listing.images[0],
+      availableRooms: hotelListings,
+    });
+    setBookingModalOpen(true);
   };
 
   if (!isPanelVisible) {
@@ -135,20 +179,27 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
             // Luxury typography - larger on mobile, shorter content
             isMobile ? "text-lg" : "text-base"
           )}>
-            {mode === "favorites" ? "Favorites" : "All Hotels"}
+            {isShowingRooms ? getFilteredHotels().find(h => h.id === selectedHotelId)?.name : (mode === "favorites" ? "Favorites" : "All Hotels")}
           </h2>
           {/* Hide count on mobile for cleaner look */}
           {!isMobile && (
             <p className="text-xs text-muted-foreground">
-              {listings.length}{" "}
-              {listings.length === 1 ? "hotel" : "hotels"}
+              {items.length}{" "}
+              {isShowingRooms ? (items.length === 1 ? "room" : "rooms") : (items.length === 1 ? "hotel" : "hotels")}
             </p>
           )}
         </div>
         <div className="flex items-center gap-1">
-          {/* Hide sidebar trigger on mobile unless in booking mode */}
-          {(!isMobile || isBookingMode) && (
-            <SidebarTrigger className="size-7" />
+          {/* Back button when viewing rooms */}
+          {isShowingRooms && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={() => selectHotel(null)}
+            >
+              <ArrowLeft className="size-5" />
+            </Button>
           )}
           {/* Mobile close button only on mobile */}
           {isMobile && (
@@ -291,330 +342,511 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
       )}
 
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
-        {listings.length === 0 ? (
+        {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Search className="size-8 text-muted-foreground mb-2" />
-            <p className="text-sm font-medium">No hotels found</p>
+            <p className="text-sm font-medium">No {isShowingRooms ? "rooms" : "hotels"} found</p>
             <p className="text-xs text-muted-foreground mt-1">
               Try adjusting your search or filters
             </p>
           </div>
         ) : viewMode === "grid" ? (
           <div className="p-2 grid grid-cols-1 gap-3">
-            {listings.map((listing) => {
-              const isSelected = selectedListingId === listing.id;
+            {items.map((item) => {
+              if (isShowingRooms) {
+                // Render room listing
+                const listing = item as Listing;
+                const isSelected = selectedListingId === listing.id;
 
-              return (
-                <div
-                  key={listing.id}
-                  onClick={() => handleListingClick(listing)}
-                  className={cn(
-                    "group cursor-pointer rounded-xl border bg-card transition-all hover:shadow-lg overflow-hidden",
-                    isSelected &&
-                      "border-primary shadow-lg ring-2 ring-primary/20"
-                  )}
-                >
-                  <div className={cn(
-                    "relative overflow-hidden",
-                    // Luxury principle: Images become primary on mobile
-                    isMobile ? "aspect-[4/5]" : "aspect-4/3" // Taller images on mobile
-                  )}>
-                    <Carousel className="h-full w-full">
-                      <CarouselContent className="h-full">
-                        {listing.images.map((image, imageIndex) => (
-                          <CarouselItem key={imageIndex} className="h-full">
-                            <img
-                              src={image}
-                              alt={`${listing.title} - Image ${imageIndex + 1}`}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src =
-                                  "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop";
-                              }}
-                            />
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      {/* Hide carousel controls on mobile for cleaner look */}
-                      {!isMobile && (
-                        <>
-                          <CarouselPrevious className="left-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
-                          <CarouselNext className="right-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
-                        </>
-                      )}
-                    </Carousel>
-                    <div className="absolute top-2 right-2 z-10">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(listing.id);
-                        }}
-                      >
-                        <Heart
-                          className={cn(
-                            "h-4 w-4 transition-colors",
-                            listing.isFavorite
-                              ? "fill-destructive text-destructive"
-                              : "text-foreground"
-                          )}
-                        />
-                      </Button>
-                    </div>
-                    {listing.isNew && (
-                      <div className="absolute top-2 left-2 z-10">
-                        <Badge
-                          variant="default"
-                          className="bg-primary text-primary-foreground text-xs"
+                return (
+                  <div
+                    key={listing.id}
+                    onClick={() => handleListingClick(listing)}
+                    className={cn(
+                      "group cursor-pointer rounded-xl border bg-card transition-all hover:shadow-lg overflow-hidden",
+                      isSelected &&
+                        "border-primary shadow-lg ring-2 ring-primary/20"
+                    )}
+                  >
+                    <div className={cn(
+                      "relative overflow-hidden",
+                      // Luxury principle: Images become primary on mobile
+                      isMobile ? "aspect-[4/5]" : "aspect-4/3" // Taller images on mobile
+                    )}>
+                      <Carousel className="h-full w-full">
+                        <CarouselContent className="h-full">
+                          {listing.images.map((image: string, imageIndex: number) => (
+                            <CarouselItem key={imageIndex} className="h-full">
+                              <img
+                                src={image}
+                                alt={`${listing.title} - Image ${imageIndex + 1}`}
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src =
+                                    "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop";
+                                }}
+                              />
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        {/* Hide carousel controls on mobile for cleaner look */}
+                        {!isMobile && (
+                          <>
+                            <CarouselPrevious className="left-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
+                            <CarouselNext className="right-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
+                          </>
+                        )}
+                      </Carousel>
+                      <div className="absolute top-2 right-2 z-10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(listing.id);
+                          }}
                         >
-                          New
+                          <Heart
+                            className={cn(
+                              "h-4 w-4 transition-colors",
+                              listing.isFavorite
+                                ? "fill-destructive text-destructive"
+                                : "text-foreground"
+                            )}
+                          />
+                        </Button>
+                      </div>
+                      {listing.isNew && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <Badge
+                            variant="default"
+                            className="bg-primary text-primary-foreground text-xs"
+                          >
+                            New
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    <div className={cn(
+                      // Luxury typography - airier on mobile
+                      isMobile ? "p-4" : "p-3"
+                    )}>
+                      <div className="mb-1 flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className={cn(
+                            "font-semibold mb-1 truncate",
+                            // Luxury typography - larger on mobile
+                            isMobile ? "text-base" : "text-sm"
+                          )}>
+                            {listing.title}
+                          </h3>
+                          <div className={cn(
+                            "flex items-center gap-1 text-muted-foreground mb-1",
+                            // Luxury typography - larger on mobile
+                            isMobile ? "text-sm" : "text-xs"
+                          )}>
+                            <MapPin className={cn(
+                              // Luxury touch - larger tap targets on mobile
+                              isMobile ? "h-4 w-4" : "h-3 w-3"
+                            )} />
+                            <span className="truncate">
+                              {listing.city}, {listing.country}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Progressive disclosure - hide secondary info on mobile */}
+                      {!isMobile && (
+                        <div className="flex items-center gap-3 mb-2 text-xs">
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                            <span className="font-medium">
+                              {listing.rating.toFixed(1)}
+                            </span>
+                            <span className="text-muted-foreground">
+                              ({listing.reviewCount})
+                            </span>
+                          </div>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-muted-foreground">
+                            {roomTypeLabels[listing.roomType]}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className={cn(
+                            "font-semibold",
+                            // Luxury typography - larger on mobile
+                            isMobile ? "text-lg" : "text-base"
+                          )}>
+                            KES {listing.pricePerNight.toLocaleString()}
+                          </span>
+                          <span className={cn(
+                            "text-muted-foreground",
+                            // Luxury typography - larger on mobile
+                            isMobile ? "text-sm" : "text-xs"
+                          )}>
+                            {" "}
+                            / night
+                          </span>
+                        </div>
+                        {/* Progressive disclosure - hide capacity info on mobile */}
+                        {!isMobile && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {listing.beds > 0 && (
+                              <span>
+                                {listing.beds} bed
+                                {listing.beds > 1 ? "s" : ""}
+                              </span>
+                            )}
+                            {listing.guests > 0 && (
+                              <span>
+                                • {listing.guests} guest
+                                {listing.guests > 1 ? "s" : ""}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <div className="mt-3 pt-3 border-t">
+                          <Button
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBookNow(listing);
+                            }}
+                          >
+                            <Calendar className="size-4 mr-2" />
+                            Book Now
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              } else {
+                // Render hotel
+                const hotel = item as HotelLocation;
+
+                return (
+                  <div
+                    key={hotel.id}
+                    onClick={() => selectHotel(hotel.id)}
+                    className={cn(
+                      "group cursor-pointer rounded-xl border bg-card transition-all hover:shadow-lg overflow-hidden"
+                    )}
+                  >
+                    <div className={cn(
+                      "relative overflow-hidden",
+                      // Luxury principle: Images become primary on mobile
+                      isMobile ? "aspect-[4/5]" : "aspect-4/3" // Taller images on mobile
+                    )}>
+                      <Carousel className="h-full w-full">
+                        <CarouselContent className="h-full">
+                          {hotel.images.slice(0, 3).map((image: string, imageIndex: number) => (
+                            <CarouselItem key={imageIndex} className="h-full">
+                              <img
+                                src={image}
+                                alt={`${hotel.name} - Image ${imageIndex + 1}`}
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src =
+                                    "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop";
+                                }}
+                              />
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        {/* Hide carousel controls on mobile for cleaner look */}
+                        {!isMobile && (
+                          <>
+                            <CarouselPrevious className="left-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
+                            <CarouselNext className="right-2 h-8 w-8 opacity-0! group-hover:opacity-100! transition-opacity bg-white/90 hover:bg-white" />
+                          </>
+                        )}
+                      </Carousel>
+                      <div className="absolute top-2 right-2 z-10">
+                        <Badge variant="secondary" className="text-xs">
+                          {hotel.stars} ★
                         </Badge>
                       </div>
-                    )}
-
-                  </div>
-                  <div className={cn(
-                    // Luxury typography - airier on mobile
-                    isMobile ? "p-4" : "p-3"
-                  )}>
-                    <div className="mb-1 flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className={cn(
-                          "font-semibold mb-1 truncate",
-                          // Luxury typography - larger on mobile
-                          isMobile ? "text-base" : "text-sm"
-                        )}>
-                          {listing.title}
-                        </h3>
-                        <div className={cn(
-                          "flex items-center gap-1 text-muted-foreground mb-1",
-                          // Luxury typography - larger on mobile
-                          isMobile ? "text-sm" : "text-xs"
-                        )}>
-                          <MapPin className={cn(
-                            // Luxury touch - larger tap targets on mobile
-                            isMobile ? "h-4 w-4" : "h-3 w-3"
-                          )} />
-                          <span className="truncate">
-                            {listing.city}, {listing.country}
-                          </span>
+                    </div>
+                    <div className={cn(
+                      // Luxury typography - airier on mobile
+                      isMobile ? "p-4" : "p-3"
+                    )}>
+                      <div className="mb-1 flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className={cn(
+                            "font-semibold mb-1 truncate",
+                            // Luxury typography - larger on mobile
+                            isMobile ? "text-base" : "text-sm"
+                          )}>
+                            {hotel.name}
+                          </h3>
+                          <div className={cn(
+                            "flex items-center gap-1 text-muted-foreground mb-1",
+                            // Luxury typography - larger on mobile
+                            isMobile ? "text-sm" : "text-xs"
+                          )}>
+                            <MapPin className={cn(
+                              // Luxury touch - larger tap targets on mobile
+                              isMobile ? "h-4 w-4" : "h-3 w-3"
+                            )} />
+                            <span className="truncate">
+                              {hotel.city}, {hotel.country}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {hotel.description && (
+                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                          {hotel.description}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap gap-1">
+                          {hotel.amenities.slice(0, 3).map((amenity: string) => (
+                            <Badge key={amenity} variant="outline" className="text-xs">
+                              {amenity}
+                            </Badge>
+                          ))}
+                          {hotel.amenities.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{hotel.amenities.length - 3} more
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
-                    {/* Progressive disclosure - hide secondary info on mobile */}
-                    {!isMobile && (
-                      <div className="flex items-center gap-3 mb-2 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">
-                            {listing.rating.toFixed(1)}
+                  </div>
+                );
+              }
+            })}
+          </div>
+        ) : (
+          <div className="p-2 space-y-3">
+            {items.map((item) => {
+              if (isShowingRooms) {
+                // Render room listing in list view
+                const listing = item as Listing;
+                const isSelected = selectedListingId === listing.id;
+
+                return (
+                  <div
+                    key={listing.id}
+                    onClick={() => handleListingClick(listing)}
+                    className={cn(
+                      "group cursor-pointer rounded-xl border bg-card transition-all hover:shadow-lg overflow-hidden",
+                      isSelected &&
+                        "border-primary shadow-lg ring-2 ring-primary/20",
+                      "flex flex-col sm:flex-row"
+                    )}
+                  >
+                    <div className="relative w-full h-48 sm:w-32 sm:h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden">
+                      <img
+                        src={listing.images[0]}
+                        alt={listing.title}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src =
+                            "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop";
+                        }}
+                      />
+                      <div className="absolute top-2 right-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 sm:h-6 sm:w-6 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(listing.id);
+                          }}
+                        >
+                          <Heart
+                            className={cn(
+                              "h-3.5 w-3.5 sm:h-3 sm:w-3 transition-colors",
+                              listing.isFavorite
+                                ? "fill-destructive text-destructive"
+                                : "text-foreground"
+                            )}
+                          />
+                        </Button>
+                      </div>
+                      {listing.isNew && (
+                        <div className="absolute top-2 left-2">
+                          <Badge
+                            variant="default"
+                            className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5"
+                          >
+                            New
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 p-3 sm:p-2.5 flex flex-col justify-between min-w-0">
+                      <div className="flex-1">
+                        <div className="mb-1.5 sm:mb-1">
+                          <h3 className="font-semibold text-sm sm:text-xs mb-1 line-clamp-2 sm:line-clamp-1">
+                            {listing.title}
+                          </h3>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">
+                              {listing.city}, {listing.country}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs mb-2">
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span className="font-medium">
+                              {listing.rating.toFixed(1)}
+                            </span>
+                            <span className="text-muted-foreground">
+                              ({listing.reviewCount})
+                            </span>
+                          </div>
+                          <span className="text-muted-foreground hidden sm:inline">
+                            •
                           </span>
                           <span className="text-muted-foreground">
-                            ({listing.reviewCount})
+                            {roomTypeLabels[listing.roomType]}
                           </span>
                         </div>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground">
-                          {roomTypeLabels[listing.roomType]}
-                        </span>
                       </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className={cn(
-                          "font-semibold",
-                          // Luxury typography - larger on mobile
-                          isMobile ? "text-lg" : "text-base"
-                        )}>
-                          KES {listing.pricePerNight.toLocaleString()}
-                        </span>
-                        <span className={cn(
-                          "text-muted-foreground",
-                          // Luxury typography - larger on mobile
-                          isMobile ? "text-sm" : "text-xs"
-                        )}>
-                          {" "}
-                          / night
-                        </span>
-                      </div>
-                      {/* Progressive disclosure - hide capacity info on mobile */}
-                      {!isMobile && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t sm:border-t-0 sm:pt-0">
+                        <div className="flex-shrink-0">
+                          <span className="text-base sm:text-sm font-semibold">
+                            KES {listing.pricePerNight.toLocaleString()}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {" "}
+                            / night
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground flex-shrink-0">
                           {listing.beds > 0 && (
-                            <span>
+                            <span className="whitespace-nowrap">
                               {listing.beds} bed
                               {listing.beds > 1 ? "s" : ""}
                             </span>
                           )}
                           {listing.guests > 0 && (
-                            <span>
-                              • {listing.guests} guest
-                              {listing.guests > 1 ? "s" : ""}
-                            </span>
+                            <>
+                              <span className="hidden sm:inline">•</span>
+                              <span className="whitespace-nowrap">
+                                {listing.guests} guest
+                                {listing.guests > 1 ? "s" : ""}
+                              </span>
+                            </>
                           )}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <div className="mt-3 pt-3 border-t">
+                          <Button
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBookNow(listing);
+                            }}
+                          >
+                            <Calendar className="size-4 mr-2" />
+                            Book Now
+                          </Button>
                         </div>
                       )}
                     </div>
-                    {isSelected && (
-                      <div className="mt-3 pt-3 border-t">
-                        <Button
-                          className="w-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsBookingMode(true);
-                          }}
-                        >
-                          <Calendar className="size-4 mr-2" />
-                          Book Now
-                        </Button>
-                      </div>
-                    )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="p-2 space-y-3">
-            {listings.map((listing) => {
-              const isSelected = selectedListingId === listing.id;
+                );
+              } else {
+                // Render hotel in list view
+                const hotel = item as HotelLocation;
 
-              return (
-                <div
-                  key={listing.id}
-                  onClick={() => handleListingClick(listing)}
-                  className={cn(
-                    "group cursor-pointer rounded-xl border bg-card transition-all hover:shadow-lg overflow-hidden",
-                    isSelected &&
-                      "border-primary shadow-lg ring-2 ring-primary/20",
-                    "flex flex-col sm:flex-row"
-                  )}
-                >
-                  <div className="relative w-full h-48 sm:w-32 sm:h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden">
-                    <img
-                      src={listing.images[0]}
-                      alt={listing.title}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src =
-                          "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop";
-                      }}
-                    />
-                    <div className="absolute top-2 right-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 sm:h-6 sm:w-6 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(listing.id);
+                return (
+                  <div
+                    key={hotel.id}
+                    onClick={() => selectHotel(hotel.id)}
+                    className={cn(
+                      "group cursor-pointer rounded-xl border bg-card transition-all hover:shadow-lg overflow-hidden",
+                      "flex flex-col sm:flex-row"
+                    )}
+                  >
+                    <div className="relative w-full h-48 sm:w-32 sm:h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden">
+                      <img
+                        src={hotel.images[0]}
+                        alt={hotel.name}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src =
+                            "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop";
                         }}
-                      >
-                        <Heart
-                          className={cn(
-                            "h-3.5 w-3.5 sm:h-3 sm:w-3 transition-colors",
-                            listing.isFavorite
-                              ? "fill-destructive text-destructive"
-                              : "text-foreground"
-                          )}
-                        />
-                      </Button>
-                    </div>
-                    {listing.isNew && (
-                      <div className="absolute top-2 left-2">
-                        <Badge
-                          variant="default"
-                          className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5"
-                        >
-                          New
+                      />
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {hotel.stars} ★
                         </Badge>
                       </div>
-                    )}
-                  </div>
-                  <div className="flex-1 p-3 sm:p-2.5 flex flex-col justify-between min-w-0">
-                    <div className="flex-1">
-                      <div className="mb-1.5 sm:mb-1">
-                        <h3 className="font-semibold text-sm sm:text-xs mb-1 line-clamp-2 sm:line-clamp-1">
-                          {listing.title}
-                        </h3>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">
-                            {listing.city}, {listing.country}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs mb-2">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">
-                            {listing.rating.toFixed(1)}
-                          </span>
-                          <span className="text-muted-foreground">
-                            ({listing.reviewCount})
-                          </span>
-                        </div>
-                        <span className="text-muted-foreground hidden sm:inline">
-                          •
-                        </span>
-                        <span className="text-muted-foreground">
-                          {roomTypeLabels[listing.roomType]}
-                        </span>
-                      </div>
                     </div>
-                    <div className="flex items-center justify-between gap-2 pt-2 border-t sm:border-t-0 sm:pt-0">
-                      <div className="flex-shrink-0">
-                        <span className="text-base sm:text-sm font-semibold">
-                          KES {listing.pricePerNight.toLocaleString()}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {" "}
-                          / night
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground flex-shrink-0">
-                        {listing.beds > 0 && (
-                          <span className="whitespace-nowrap">
-                            {listing.beds} bed
-                            {listing.beds > 1 ? "s" : ""}
-                          </span>
-                        )}
-                        {listing.guests > 0 && (
-                          <>
-                            <span className="hidden sm:inline">•</span>
-                            <span className="whitespace-nowrap">
-                              {listing.guests} guest
-                              {listing.guests > 1 ? "s" : ""}
+                    <div className="flex-1 p-3 sm:p-2.5 flex flex-col justify-between min-w-0">
+                      <div className="flex-1">
+                        <div className="mb-1.5 sm:mb-1">
+                          <h3 className="font-semibold text-sm sm:text-xs mb-1 line-clamp-2 sm:line-clamp-1">
+                            {hotel.name}
+                          </h3>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">
+                              {hotel.city}, {hotel.country}
                             </span>
-                          </>
+                          </div>
+                        </div>
+                        {hotel.description && (
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                            {hotel.description}
+                          </p>
                         )}
+                        <div className="flex flex-wrap gap-1">
+                          {hotel.amenities.slice(0, 3).map((amenity: string) => (
+                            <Badge key={amenity} variant="outline" className="text-xs">
+                              {amenity}
+                            </Badge>
+                          ))}
+                          {hotel.amenities.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{hotel.amenities.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    {isSelected && (
-                      <div className="mt-3 pt-3 border-t">
-                        <Button
-                          className="w-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsBookingMode(true);
-                          }}
-                        >
-                          <Calendar className="size-4 mr-2" />
-                          Book Now
-                        </Button>
-                      </div>
-                    )}
                   </div>
-                </div>
-              );
+                );
+              }
             })}
           </div>
         )}
       </div>
+
+      {selectedHotelForBooking && (
+        <BookingModal
+          hotelName={selectedHotelForBooking.hotelName}
+          city={selectedHotelForBooking.city}
+          country={selectedHotelForBooking.country}
+          image={selectedHotelForBooking.image}
+          availableRooms={selectedHotelForBooking.availableRooms}
+          isOpen={bookingModalOpen}
+          onClose={() => setBookingModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

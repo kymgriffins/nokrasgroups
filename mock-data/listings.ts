@@ -194,15 +194,33 @@ function getRandomPrice(): number {
   return Math.floor(Math.random() * 400) + 50;
 }
 
+export const roomTypeLabels: Record<RoomType, string> = {
+  standard: "Standard",
+  deluxe: "Deluxe",
+  suite: "Suite",
+  executive: "Executive",
+  presidential: "Presidential",
+};
+
 function createListingForHotel(
   id: string,
   hotel: HotelLocation,
-  index: number
+  index: number,
+  roomType: RoomType
 ): Listing {
-  const beds = 2; // Default for hotel listing
-  const guests = 4; // Default for hotel listing
   const basePrice = hotel.stars * 5000; // Base price for 5-star hotels in KES (25,000)
-  const pricePerNight = basePrice + Math.floor(Math.random() * 55000); // Range: 25,000 - 80,000 KES
+
+  // Room type specific configurations
+  const roomConfigs = {
+    standard: { beds: 1, guests: 2, priceMultiplier: 1, bedType: "Single bed" },
+    deluxe: { beds: 1, guests: 2, priceMultiplier: 1.5, bedType: "King bed" },
+    suite: { beds: 1, guests: 4, priceMultiplier: 2.5, bedType: "King bed + sofa" },
+    executive: { beds: 1, guests: 3, priceMultiplier: 2, bedType: "Queen bed" },
+    presidential: { beds: 2, guests: 6, priceMultiplier: 4, bedType: "King beds" },
+  };
+
+  const config = roomConfigs[roomType];
+  const pricePerNight = Math.round(basePrice * config.priceMultiplier + Math.floor(Math.random() * 30000));
   const rating = 4 + Math.random() * 1;
   const reviewCount = Math.floor(Math.random() * 500) + 100;
 
@@ -211,8 +229,8 @@ function createListingForHotel(
 
   return {
     id,
-    title: `${hotel.name} - Luxury Accommodation`,
-    description: hotel.description || 'Experience luxury accommodation at this premier Nokras hotel.',
+    title: `${hotel.name} - ${roomTypeLabels[roomType]} Room`,
+    description: hotel.description || `Experience luxury accommodation in our ${roomTypeLabels[roomType]} room at this premier Nokras hotel.`,
     address: hotel.address,
     city: hotel.city,
     country: hotel.country,
@@ -221,9 +239,9 @@ function createListingForHotel(
       lng: hotel.coordinates.lng + lngOffset,
     },
     pricePerNight,
-    roomType: 'deluxe', // Default room type for hotel overview
-    beds,
-    guests,
+    roomType,
+    beds: config.beds,
+    guests: config.guests,
     rating,
     reviewCount,
     images: hotel.images.slice(0, 5),
@@ -239,15 +257,12 @@ function createListingForHotel(
   };
 }
 
-export const listings: Listing[] = nokrasLocations.map((hotel, hotelIndex) => {
-  const listingId = `listing-${hotelIndex + 1}`;
-  return createListingForHotel(listingId, hotel, hotelIndex);
-});
+export const listings: Listing[] = nokrasLocations.flatMap((hotel, hotelIndex) => {
+  // Create multiple room types per hotel (2-4 random room types)
+  const availableRoomTypes = getRandomElements(roomTypes, Math.floor(Math.random() * 3) + 2);
 
-export const roomTypeLabels: Record<RoomType, string> = {
-  standard: "Standard",
-  deluxe: "Deluxe",
-  suite: "Suite",
-  executive: "Executive",
-  presidential: "Presidential",
-};
+  return availableRoomTypes.map((roomType, roomIndex) => {
+    const listingId = `listing-${hotelIndex + 1}-${roomType}`;
+    return createListingForHotel(listingId, hotel, hotelIndex, roomType);
+  });
+});

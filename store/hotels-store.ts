@@ -4,6 +4,7 @@ import {
   type Listing,
   type RoomType,
 } from "@/mock-data/listings";
+import { nokrasLocations, type HotelLocation } from "@/mock-data/locations";
 
 type SortBy =
   | "price-low"
@@ -22,6 +23,7 @@ interface GuestInfo {
 
 interface HotelsState {
   listings: Listing[];
+  hotels: HotelLocation[];
   searchQuery: string;
   selectedRoomTypes: RoomType[];
   priceRange: [number, number];
@@ -30,6 +32,7 @@ interface HotelsState {
   amenities: string[];
   sortBy: SortBy;
   selectedListingId: string | null;
+  selectedHotelId: string | null;
   mapCenter: { lat: number; lng: number };
   mapZoom: number;
   mapStyle: MapStyle;
@@ -47,6 +50,7 @@ interface HotelsState {
   setSortBy: (sort: SortBy) => void;
   toggleFavorite: (listingId: string) => void;
   selectListing: (listingId: string | null) => void;
+  selectHotel: (hotelId: string | null) => void;
   setMapCenter: (center: { lat: number; lng: number }) => void;
   setMapZoom: (zoom: number) => void;
   setMapStyle: (style: MapStyle) => void;
@@ -54,6 +58,8 @@ interface HotelsState {
   setIsBookingMode: (mode: boolean) => void;
   getFilteredListings: () => Listing[];
   getFavoriteListings: () => Listing[];
+  getFilteredHotels: () => HotelLocation[];
+  getRoomTypesForHotel: (hotelName: string) => Listing[];
   resetFilters: () => void;
 }
 
@@ -80,6 +86,7 @@ function calculateDistance(
 
 export const useHotelsStore = create<HotelsState>((set, get) => ({
   listings: initialListings,
+  hotels: nokrasLocations,
   searchQuery: "",
   selectedRoomTypes: [],
   priceRange: defaultPriceRange,
@@ -88,6 +95,7 @@ export const useHotelsStore = create<HotelsState>((set, get) => ({
   amenities: [],
   sortBy: "price-low",
   selectedListingId: null,
+  selectedHotelId: null,
   mapCenter: { lat: -1.0, lng: 37.5 },
   mapZoom: 7,
   mapStyle: "default",
@@ -159,6 +167,8 @@ export const useHotelsStore = create<HotelsState>((set, get) => ({
     })),
 
   selectListing: (listingId) => set({ selectedListingId: listingId }),
+
+  selectHotel: (hotelId) => set({ selectedHotelId: hotelId }),
 
   setMapCenter: (center) => set({ mapCenter: center }),
 
@@ -255,6 +265,9 @@ export const useHotelsStore = create<HotelsState>((set, get) => ({
             );
             return distA - distB;
           });
+        } else {
+          // If no user location, sort by price low as fallback
+          filtered.sort((a, b) => a.pricePerNight - b.pricePerNight);
         }
         break;
     }
@@ -287,5 +300,28 @@ export const useHotelsStore = create<HotelsState>((set, get) => ({
     }
 
     return favorites;
+  },
+
+  getFilteredHotels: () => {
+    const state = get();
+    let filtered = [...state.hotels];
+
+    if (state.searchQuery) {
+      const query = state.searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (hotel) =>
+          hotel.name.toLowerCase().includes(query) ||
+          hotel.description?.toLowerCase().includes(query) ||
+          hotel.city.toLowerCase().includes(query) ||
+          hotel.address.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  },
+
+  getRoomTypesForHotel: (hotelName: string) => {
+    const state = get();
+    return state.listings.filter((listing) => listing.hotel.name === hotelName);
   },
 }));
