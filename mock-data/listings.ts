@@ -5,7 +5,7 @@ export type RoomType =
   | "deluxe"
   | "suite"
   | "executive"
-  | "presidential";
+  | "villa";
 
 export type Listing = {
   id: string;
@@ -39,9 +39,9 @@ export type Listing = {
 const roomTypes: RoomType[] = [
   "standard",
   "deluxe",
-  "suite",
   "executive",
-  "presidential",
+  "suite",
+  "villa",
 ];
 
 const amenitiesList = [
@@ -199,7 +199,7 @@ export const roomTypeLabels: Record<RoomType, string> = {
   deluxe: "Deluxe",
   suite: "Suite",
   executive: "Executive",
-  presidential: "Presidential",
+  villa: "Villa",
 };
 
 function createListingForHotel(
@@ -212,11 +212,11 @@ function createListingForHotel(
 
   // Room type specific configurations
   const roomConfigs = {
-    standard: { beds: 1, guests: 2, priceMultiplier: 1, bedType: "Single bed" },
+    standard: { beds: 1, guests: 2, priceMultiplier: 1.0, bedType: "Queen bed" },
     deluxe: { beds: 1, guests: 2, priceMultiplier: 1.5, bedType: "King bed" },
+    executive: { beds: 1, guests: 2, priceMultiplier: 2.0, bedType: "King bed + workspace" },
     suite: { beds: 1, guests: 4, priceMultiplier: 2.5, bedType: "King bed + sofa" },
-    executive: { beds: 1, guests: 3, priceMultiplier: 2, bedType: "Queen bed" },
-    presidential: { beds: 2, guests: 6, priceMultiplier: 4, bedType: "King beds" },
+    villa: { beds: 2, guests: 6, priceMultiplier: 3.5, bedType: "Master king + guest rooms" },
   };
 
   const config = roomConfigs[roomType];
@@ -258,11 +258,16 @@ function createListingForHotel(
 }
 
 export const listings: Listing[] = nokrasLocations.flatMap((hotel, hotelIndex) => {
-  // Create multiple room types per hotel (2-4 random room types)
-  const availableRoomTypes = getRandomElements(roomTypes, Math.floor(Math.random() * 3) + 2);
+  // Create one room of each available category per hotel
+  const availableRoomTypes = getRandomElements(roomTypes, Math.min(3, Math.floor(Math.random() * 2) + 2)); // 2-3 room types per hotel
 
-  return availableRoomTypes.map((roomType, roomIndex) => {
+  const rooms: Listing[] = [];
+
+  // Create one instance of each room type category
+  availableRoomTypes.forEach((roomType) => {
     const listingId = `listing-${hotelIndex + 1}-${roomType}`;
-    return createListingForHotel(listingId, hotel, hotelIndex, roomType);
+    rooms.push(createListingForHotel(listingId, hotel, hotelIndex, roomType));
   });
+
+  return rooms;
 });

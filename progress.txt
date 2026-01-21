@@ -15,19 +15,19 @@ Legend:
 - [ ] Add hotel-level metadata (location, description, amenities, theme accents)
 
 ## Data Structure Updates
-- [ ] Update mock-data/listings.ts to hotel-room structure
-- [ ] Create hotel definitions with unique identities
-- [ ] Generate realistic room data for each hotel (20-30 rooms per hotel)
+- [x] Update mock-data/listings.ts to hotel-room structure
+- [x] Create hotel definitions with unique identities
+- [x] Generate realistic room data for each hotel (20-30 rooms per hotel)
 - [ ] Update TypeScript interfaces in store/nokras-store.ts
 - [ ] Implement hotel clustering logic for map markers
 
 ## Store and State Management
 - [x] Implement detailed guest filtering with children and ages
-- [ ] Rename and refactor Zustand store to hotel-centric terminology
-- [ ] Update filtering logic for hotel-room hierarchy
-- [ ] Modify sorting options for hotel context
-- [ ] Implement hotel selection and room browsing states
-- [ ] Update favorites system for rooms within hotels
+- [x] Rename and refactor Zustand store to hotel-centric terminology
+- [x] Update filtering logic for hotel-room hierarchy
+- [x] Modify sorting options for hotel context
+- [x] Implement hotel selection and room browsing states
+- [x] Update favorites system for rooms within hotels
 
 ## Map Experience Redesign
 - [x] Set initial map view to Kenya

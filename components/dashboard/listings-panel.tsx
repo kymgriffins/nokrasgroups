@@ -144,11 +144,13 @@ export function ListingsPanel({ mode = "all" }: ListingsPanelProps) {
 
   return (
     <div className={cn(
-      "absolute left-4 top-4 bottom-4 z-20 flex flex-col bg-background rounded-xl shadow-xl border overflow-hidden",
+      "absolute z-20 flex flex-col bg-background rounded-xl shadow-xl border overflow-hidden",
+      // Positioning: left side on mobile/tablet, left half on large screens
+      isMobile || isTablet ? "left-4 top-4 bottom-4" : "left-0 top-0 bottom-0",
       // Luxury responsive sizing - reduction not compression
       isMobile ? "w-[calc(100vw-2rem)]" : // Full width minus margins on mobile
       isTablet ? "w-80" : // Medium on tablet
-      "w-[420px]" // Full on desktop
+      "w-1/2" // Half screen on large desktop
     )}>
       <div className={cn(
         "border-b flex items-center justify-between",

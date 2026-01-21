@@ -7,8 +7,9 @@ import { MapControls } from "@/components/dashboard/map-controls";
 export default function HotelsPage() {
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <div className="absolute inset-0 w-full h-full bg-blue-500 flex items-center justify-center text-white text-2xl">
-        Map Placeholder
+      {/* Map takes full screen on mobile/tablet, right half on large screens */}
+      <div className="absolute inset-0 lg:left-1/2 w-full lg:w-1/2 h-full">
+        <MapView />
       </div>
       <ListingsPanel />
       <MapControls />

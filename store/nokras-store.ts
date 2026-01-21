@@ -52,13 +52,20 @@ export const isPastDate = (date: Date): boolean => {
   return date < now;
 };
 
-type SortBy =
+type RoomSortBy =
   | "price-low"
   | "price-high"
   | "rating"
   | "newest"
   | "reviews"
   | "nearest";
+
+type HotelSortBy =
+  | "name"
+  | "rating"
+  | "price-low"
+  | "price-high"
+  | "distance";
 
 type MapStyle = "default" | "streets" | "outdoors" | "satellite";
 
@@ -77,7 +84,7 @@ interface HotelsState {
   beds: number | null;
   guests: GuestInfo | null;
   amenities: string[];
-  sortBy: SortBy;
+  sortBy: RoomSortBy;
   selectedListingId: string | null;
   selectedHotelId: string | null;
   mapCenter: { lat: number; lng: number };
@@ -94,7 +101,7 @@ interface HotelsState {
   removeChild: (index: number) => void;
   updateChildAge: (index: number, age: number) => void;
   toggleAmenity: (amenity: string) => void;
-  setSortBy: (sort: SortBy) => void;
+  setSortBy: (sort: RoomSortBy) => void;
   toggleFavorite: (listingId: string) => void;
   selectListing: (listingId: string | null) => void;
   selectHotel: (hotelId: string | null) => void;
@@ -114,6 +121,12 @@ interface HotelsState {
   cancelBooking: (bookingId: string) => { success: boolean; error?: string };
   getBookingsForListing: (listingId: string) => Booking[];
   getAllBookings: () => Booking[];
+  // Additional hotel-centric functions
+  getHotelById: (hotelId: string) => HotelLocation | undefined;
+  getRoomsForHotel: (hotelId: string) => Listing[];
+  getHotelPriceRange: (hotelId: string) => { min: number; max: number } | null;
+  getHotelStats: (hotelId: string) => { totalRooms: number; availableRooms: number; avgRating: number };
+  getLowestPriceForHotel: (hotelId: string) => number | null;
 }
 
 const defaultPriceRange: [number, number] = [0, 100000];
@@ -150,8 +163,8 @@ export const useHotelsStore = create<HotelsState>((set, get) => ({
   sortBy: "price-low",
   selectedListingId: null,
   selectedHotelId: null,
-  mapCenter: { lat: -1.0, lng: 37.5 },
-  mapZoom: 7,
+  mapCenter: { lat: -0.65, lng: 37.3 },
+  mapZoom: 9,
   mapStyle: "default",
   userLocation: null,
   isBookingMode: false,
@@ -489,5 +502,43 @@ export const useHotelsStore = create<HotelsState>((set, get) => ({
   getAllBookings: (): Booking[] => {
     const state = get();
     return [...state.bookings];
+  },
+
+  // Additional hotel-centric functions
+  getHotelById: (hotelId: string): HotelLocation | undefined => {
+    const state = get();
+    return state.hotels.find(hotel => hotel.id === hotelId);
+  },
+
+  getRoomsForHotel: (hotelId: string): Listing[] => {
+    const state = get();
+    return state.listings.filter(listing => listing.hotel.name === state.hotels.find(h => h.id === hotelId)?.name);
+  },
+
+  getHotelPriceRange: (hotelId: string): { min: number; max: number } | null => {
+    const rooms = get().getRoomsForHotel(hotelId);
+    if (rooms.length === 0) return null;
+
+    const prices = rooms.map(room => room.pricePerNight);
+    return {
+      min: Math.min(...prices),
+      max: Math.max(...prices)
+    };
+  },
+
+  getHotelStats: (hotelId: string): { totalRooms: number; availableRooms: number; avgRating: number } => {
+    const rooms = get().getRoomsForHotel(hotelId);
+    const totalRooms = rooms.length;
+    const avgRating = totalRooms > 0 ? rooms.reduce((sum, room) => sum + room.rating, 0) / totalRooms : 0;
+
+    // For MVP, all rooms are considered available (no real availability logic for stats)
+    const availableRooms = totalRooms;
+
+    return { totalRooms, availableRooms, avgRating };
+  },
+
+  getLowestPriceForHotel: (hotelId: string): number | null => {
+    const priceRange = get().getHotelPriceRange(hotelId);
+    return priceRange ? priceRange.min : null;
   },
 }));

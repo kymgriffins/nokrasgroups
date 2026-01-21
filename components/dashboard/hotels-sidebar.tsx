@@ -57,7 +57,7 @@ const roomTypes: RoomType[] = [
   "deluxe",
   "suite",
   "executive",
-  "presidential",
+  "villa",
 ];
 
 export function HotelsSidebar({
