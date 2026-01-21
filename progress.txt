@@ -18,7 +18,7 @@ Legend:
 - [ ] Update mock-data/listings.ts to hotel-room structure
 - [ ] Create hotel definitions with unique identities
 - [ ] Generate realistic room data for each hotel (20-30 rooms per hotel)
-- [ ] Update TypeScript interfaces in store/rentals-store.ts
+- [ ] Update TypeScript interfaces in store/nokras-store.ts
 - [ ] Implement hotel clustering logic for map markers
 
 ## Store and State Management

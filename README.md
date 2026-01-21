@@ -58,12 +58,12 @@ A beautiful, modern hotel booking exploration application built with Next.js by 
 ## 📁 Project Structure
 
 ```
-rentals/
+nokrasgroups/
 ├── app/                          # Next.js app directory
 │   ├── (dashboard)/             # Dashboard route group
 │   │   ├── favorites/           # Favorites page
 │   │   ├── layout.tsx           # Dashboard layout with sidebar
-│   │   ├── page.tsx             # Main rentals page
+│   │   ├── page.tsx             # Main hotels page
 │   │   └── sidebar.tsx          # Navigation sidebar
 │   ├── globals.css              # Global styles
 │   ├── layout.tsx               # Root layout
@@ -82,7 +82,7 @@ rentals/
 ├── mock-data/                   # Sample data
 │   └── listings.ts              # Property listings data
 └── store/                       # State management
-    └── rentals-store.ts         # Zustand store
+    └── hotels-store.ts          # Zustand store
 ```
 
 ## 🗃️ Data Model
@@ -136,8 +136,8 @@ interface Listing {
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/rentals.git
-   cd rentals
+   git clone https://github.com/yourusername/nokrasgroups.git
+   cd nokrasgroups
    ```
 
 2. **Install dependencies**

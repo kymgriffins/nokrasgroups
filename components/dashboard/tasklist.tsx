@@ -56,7 +56,7 @@ const defaultTasks: TaskCategory[] = [
       { id: "10", title: "Update mock-data/listings.ts to hotel-room structure", completed: false, category: "Data Structure Updates" },
       { id: "11", title: "Create hotel definitions with unique identities", completed: false, category: "Data Structure Updates" },
       { id: "12", title: "Generate realistic room data for each hotel (20-30 rooms per hotel)", completed: false, category: "Data Structure Updates" },
-      { id: "13", title: "Update TypeScript interfaces in store/rentals-store.ts", completed: false, category: "Data Structure Updates" },
+      { id: "13", title: "Update TypeScript interfaces in store/nokras-store.ts", completed: false, category: "Data Structure Updates" },
       { id: "14", title: "Implement hotel clustering logic for map markers", completed: false, category: "Data Structure Updates" },
     ],
   },
@@ -399,4 +399,3 @@ export function TaskList({ tasks = defaultTasks, onTaskToggle }: TaskListProps) 
     </div>
   );
 }
-

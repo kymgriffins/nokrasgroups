@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Rentals - Gr8Builds",
-  description: "A beautiful property rental explorer with interactive maps by Gr8Builds",
+  title: "Nokras - Gr8Builds",
+  description: "A beautiful hotel booking platform with interactive maps by Gr8Builds",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

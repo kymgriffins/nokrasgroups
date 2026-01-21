@@ -18,7 +18,7 @@ import {
   MessageSquare,
   Calendar,
 } from "lucide-react";
-import { useHotelsStore } from "@/store/hotels-store";
+import { useHotelsStore } from "@/store/nokras-store";
 import { type Listing, roomTypeLabels } from "@/mock-data/listings";
 import { type HotelLocation } from "@/mock-data/locations";
 import { Button } from "@/components/ui/button";
