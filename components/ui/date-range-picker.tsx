@@ -4,6 +4,7 @@ import * as React from "react"
 import { CalendarIcon } from "lucide-react"
 import { addDays, format } from "date-fns"
 import { DateRange } from "react-day-picker"
+import { getCanonicalNow } from "@/store/nokras-store"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,16 @@ export function DateRangePicker({
   const handleSelect = (range: DateRange | undefined) => {
     setDate(range)
     onChange?.(range)
+  }
+
+  // Disable dates before today (forward-only booking rule)
+  const today = new Date(getCanonicalNow())
+  today.setHours(0, 0, 0, 0) // Start of today
+
+  const isDateDisabled = (date: Date) => {
+    const checkDate = new Date(date)
+    checkDate.setHours(0, 0, 0, 0) // Normalize to start of day
+    return checkDate < today
   }
 
   return (
@@ -69,6 +80,7 @@ export function DateRangePicker({
             selected={date}
             onSelect={handleSelect}
             numberOfMonths={2}
+            disabled={isDateDisabled}
           />
         </PopoverContent>
       </Popover>

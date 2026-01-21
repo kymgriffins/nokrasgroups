@@ -3,8 +3,9 @@
 import * as React from "react";
 import { Calendar, CreditCard, Smartphone, Check, User, Mail } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { useHotelsStore } from "@/store/hotels-store";
+import { useHotelsStore } from "@/store/nokras-store";
 import { type Listing, roomTypeLabels } from "@/mock-data/listings";
+import { isPastDate, normalizeCheckIn, normalizeCheckOut } from "@/store/nokras-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,7 +80,7 @@ export function BookingFlow({
     initialRoomId ?? ""
   );
 
-  const { guests, addChild, removeChild, updateChildAge, setGuests } =
+  const { guests, addChild, removeChild, updateChildAge, setGuests, createBooking } =
     useHotelsStore();
 
   const [form, setForm] = React.useState<BookingForm>({
@@ -133,11 +134,34 @@ export function BookingFlow({
   };
 
   const handleSubmit = async () => {
+    if (!form.dateRange?.from || !form.dateRange?.to || !guests) return;
+
     setIsProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Create the booking using MVP system
+    const result = createBooking({
+      listingId: selectedRoomId,
+      checkIn: normalizeCheckIn(form.dateRange.from),
+      checkOut: normalizeCheckOut(form.dateRange.to),
+      guests,
+      contactInfo: {
+        name: `${form.firstName} ${form.lastName}`,
+        email: form.email,
+        phone: form.phone,
+      },
+    });
+
     setIsProcessing(false);
-    setStep("confirmation");
-    onComplete?.();
+
+    if (result.success && result.booking) {
+      setStep("confirmation");
+      onComplete?.();
+    } else {
+      // Handle booking failure - in MVP, we show error but don't allow retry
+      alert(`Booking failed: ${result.error}`);
+      // Reset to details step for user to try again
+      setStep("details");
+    }
   };
 
   return (
@@ -569,7 +593,21 @@ export function BookingFlow({
               Cancel
             </Button>
             <Button
-              onClick={() => setStep("payment")}
+              onClick={() => {
+                // Check availability before proceeding to payment
+                const isAvailable = useHotelsStore.getState().checkAvailability(
+                  selectedRoomId,
+                  normalizeCheckIn(form.dateRange!.from!),
+                  normalizeCheckOut(form.dateRange!.to!)
+                );
+
+                if (!isAvailable) {
+                  alert("This room is not available for the selected dates. Please choose different dates.");
+                  return;
+                }
+
+                setStep("payment");
+              }}
               disabled={
                 !form.dateRange?.from ||
                 !form.dateRange?.to ||
@@ -615,4 +653,3 @@ export function BookingFlow({
     </div>
   );
 }
-

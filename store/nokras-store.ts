@@ -6,6 +6,52 @@ import {
 } from "@/mock-data/listings";
 import { nokrasLocations, type HotelLocation } from "@/mock-data/locations";
 
+// MVP Booking System Types
+export type BookingStatus = "pending" | "confirmed" | "cancelled";
+
+export interface Booking {
+  id: string;
+  listingId: string;
+  checkIn: Date;
+  checkOut: Date;
+  guests: {
+    adults: number;
+    children: { age: number }[];
+  };
+  contactInfo: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  status: BookingStatus;
+  createdAt: Date;
+  confirmedAt?: Date;
+  cancelledAt?: Date;
+  totalPrice: number;
+}
+
+// Canonical Time System - Single authoritative "now"
+export const getCanonicalNow = (): Date => new Date();
+
+// Normalize dates to start/end of day in UTC
+export const normalizeCheckIn = (date: Date): Date => {
+  const normalized = new Date(date);
+  normalized.setUTCHours(14, 0, 0, 0); // Check-in at 2 PM UTC
+  return normalized;
+};
+
+export const normalizeCheckOut = (date: Date): Date => {
+  const normalized = new Date(date);
+  normalized.setUTCHours(12, 0, 0, 0); // Check-out at 12 PM UTC
+  return normalized;
+};
+
+// Check if date is in the past (future-only bookings)
+export const isPastDate = (date: Date): boolean => {
+  const now = getCanonicalNow();
+  return date < now;
+};
+
 type SortBy =
   | "price-low"
   | "price-high"
@@ -24,6 +70,7 @@ interface GuestInfo {
 interface HotelsState {
   listings: Listing[];
   hotels: HotelLocation[];
+  bookings: Booking[];
   searchQuery: string;
   selectedRoomTypes: RoomType[];
   priceRange: [number, number];
@@ -61,6 +108,12 @@ interface HotelsState {
   getFilteredHotels: () => HotelLocation[];
   getRoomTypesForHotel: (hotelName: string) => Listing[];
   resetFilters: () => void;
+  // MVP Booking System Functions
+  checkAvailability: (listingId: string, checkIn: Date, checkOut: Date) => boolean;
+  createBooking: (bookingData: Omit<Booking, 'id' | 'status' | 'createdAt' | 'totalPrice'>) => { success: boolean; booking?: Booking; error?: string };
+  cancelBooking: (bookingId: string) => { success: boolean; error?: string };
+  getBookingsForListing: (listingId: string) => Booking[];
+  getAllBookings: () => Booking[];
 }
 
 const defaultPriceRange: [number, number] = [0, 100000];
@@ -87,6 +140,7 @@ function calculateDistance(
 export const useHotelsStore = create<HotelsState>((set, get) => ({
   listings: initialListings,
   hotels: nokrasLocations,
+  bookings: [],
   searchQuery: "",
   selectedRoomTypes: [],
   priceRange: defaultPriceRange,
@@ -323,5 +377,117 @@ export const useHotelsStore = create<HotelsState>((set, get) => ({
   getRoomTypesForHotel: (hotelName: string) => {
     const state = get();
     return state.listings.filter((listing) => listing.hotel.name === hotelName);
+  },
+
+  // MVP Booking System Functions
+
+  // 3. Authoritative Availability Engine - Check for overlapping confirmed bookings
+  checkAvailability: (listingId: string, checkIn: Date, checkOut: Date): boolean => {
+    const state = get();
+    const normalizedCheckIn = normalizeCheckIn(checkIn);
+    const normalizedCheckOut = normalizeCheckOut(checkOut);
+
+    // Basic validation rules
+    if (normalizedCheckOut <= normalizedCheckIn) return false;
+    if (isPastDate(normalizedCheckIn)) return false;
+
+    // Check for overlapping confirmed bookings
+    const conflictingBookings = state.bookings.filter(booking =>
+      booking.listingId === listingId &&
+      booking.status === "confirmed" &&
+      // Overlap detection: !(booking.checkOut <= checkIn || booking.checkIn >= checkOut)
+      !(normalizeCheckOut(booking.checkOut) <= normalizedCheckIn || normalizeCheckIn(booking.checkIn) >= normalizedCheckOut)
+    );
+
+    return conflictingBookings.length === 0;
+  },
+
+  // 4. Atomic Booking Confirmation - Check availability and create booking in one operation
+  createBooking: (bookingData: Omit<Booking, 'id' | 'status' | 'createdAt' | 'totalPrice'>): { success: boolean; booking?: Booking; error?: string } => {
+    const state = get();
+
+    // Find the listing to calculate price
+    const listing = state.listings.find(l => l.id === bookingData.listingId);
+    if (!listing) {
+      return { success: false, error: "Listing not found" };
+    }
+
+    // Basic validation rules
+    const normalizedCheckIn = normalizeCheckIn(bookingData.checkIn);
+    const normalizedCheckOut = normalizeCheckOut(bookingData.checkOut);
+
+    if (normalizedCheckOut <= normalizedCheckIn) {
+      return { success: false, error: "Check-out must be after check-in" };
+    }
+
+    if (isPastDate(normalizedCheckIn)) {
+      return { success: false, error: "Cannot book past dates" };
+    }
+
+    // Calculate nights and total price
+    const nights = Math.ceil((normalizedCheckOut.getTime() - normalizedCheckIn.getTime()) / (1000 * 60 * 60 * 24));
+    if (nights < 1) {
+      return { success: false, error: "Minimum 1 night stay required" };
+    }
+
+    const totalPrice = nights * listing.pricePerNight;
+
+    // Atomic operation: Check availability and create booking
+    const isAvailable = get().checkAvailability(bookingData.listingId, bookingData.checkIn, bookingData.checkOut);
+    if (!isAvailable) {
+      return { success: false, error: "Room not available for selected dates" };
+    }
+
+    // Create booking with confirmed status (direct to confirmed for MVP)
+    const booking: Booking = {
+      ...bookingData,
+      id: `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      status: "confirmed",
+      createdAt: getCanonicalNow(),
+      confirmedAt: getCanonicalNow(),
+      totalPrice,
+    };
+
+    // Add to bookings (simulating database insert)
+    set(state => ({
+      bookings: [...state.bookings, booking]
+    }));
+
+    return { success: true, booking };
+  },
+
+  // 7. No Past Data Mutation - Cancel instead of delete
+  cancelBooking: (bookingId: string): { success: boolean; error?: string } => {
+    const state = get();
+    const booking = state.bookings.find(b => b.id === bookingId);
+
+    if (!booking) {
+      return { success: false, error: "Booking not found" };
+    }
+
+    if (booking.status === "cancelled") {
+      return { success: false, error: "Booking already cancelled" };
+    }
+
+    // Update booking status to cancelled (no deletion)
+    set(state => ({
+      bookings: state.bookings.map(b =>
+        b.id === bookingId
+          ? { ...b, status: "cancelled", cancelledAt: getCanonicalNow() }
+          : b
+      )
+    }));
+
+    return { success: true };
+  },
+
+  getBookingsForListing: (listingId: string): Booking[] => {
+    const state = get();
+    return state.bookings.filter(booking => booking.listingId === listingId);
+  },
+
+  getAllBookings: (): Booking[] => {
+    const state = get();
+    return [...state.bookings];
   },
 }));
