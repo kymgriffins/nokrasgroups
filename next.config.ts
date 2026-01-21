@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Disable static generation to avoid prerendering issues
+  output: 'export',
+  trailingSlash: true,
 };
 
 export default nextConfig;
