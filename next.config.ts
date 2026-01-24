@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -13,7 +14,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Disable static generation to avoid prerendering issues
+  // Static export mode for deployment
   output: 'export',
   trailingSlash: true,
 };

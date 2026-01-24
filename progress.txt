@@ -175,3 +175,218 @@ Legend:
 *Progress: 50/50 tasks completed (100%) + 12/12 MVP core tasks completed (100%)*
 
 *Last updated: 2026-01-21*
+
+---
+
+## Phase 4: "Liquid Motion" Digital Transformation
+
+### Core Animation Architecture Setup
+- [ ] Set up GSAP/Lenis/Barba core architecture.
+- [ ] Install and configure Lenis smooth scroll library
+- [ ] Configure GSAP ScrollTrigger for pinned sections
+- [ ] Set up Barba.js for PJAX page transitions
+- [ ] Create reusable animation utility functions
+
+### Phase 1: Global "Organic" Shell
+- [ ] Implement Custom Inertial Scroll (Lenis) with "weightless" float on hotel images
+- [ ] Create Magnetic Brand Cursor with custom SVG that snaps to "Book Now" buttons
+- [ ] Implement PJAX Page Transitions (Barba.js) with "Liquid Wipe" effect between branches
+
+### Phase 2: Branch Landing Pages - Hero & Interactive Sections
+
+#### 2A: Nokras Riverine (Sagana) - Pinned Scale-Up
+- [ ] Develop "Liquid Window" Hero for Riverine branch
+- [ ] Create Hero section with drone shot masked inside large "N" font
+- [ ] Implement scroll-triggered 100x pinned scale animation
+- [ ] Add viewport "entrance" effect when scrolling completes
+
+#### 2B: Nokras Enkare (Sagana) - Horizontal Scrollytelling
+- [ ] Build horizontal scroll track for "Luxury Tented Camp" gallery
+- [ ] Implement RGB Shift effect on images (Kenyan sun heat haze)
+- [ ] Create smooth horizontal carousel transitions
+
+#### 2C: Nokras Silver Oak (Embu) - Bento Grid Interactive
+- [ ] Build "Skyline Bento Grid" for Silver Oak branch
+- [ ] Implement Bento-style amenities grid (Gym, Pool, Skyline Bar blocks)
+- [ ] Add Magnetic Hover interactions for each block
+- [ ] Create Staggered Mask Reveal animation for text descriptions
+
+#### 2D: Hotel Nokras Murang'a - Variable Font Morph
+- [ ] Animate "Timeless Hospitality" headline with scroll-driven font weight thinning
+- [ ] Implement "unwinding" staycation visual metaphor
+- [ ] Create scroll-linked typography animation
+
+### Phase 3: "Curtain" Footer & Media Enhancement
+- [ ] Implement "Big Reveal" Footer with slide-up content and fixed footer overlay
+- [ ] Add social links and "Quick Book" interface to footer
+- [ ] Apply "Water Ripple" shader to pool/river imagery (Curtains.js/Three.js)
+- [ ] Implement Fragment Shaders for pool/river imagery distortion effects
+
+### Shader & Advanced Effects
+- [ ] Implement Fragment Shaders for pool/river imagery.
+- [ ] Create Water Ripple distortion effects using WebGL
+- [ ] Implement RGB Shift post-processing effect
+
+### Testing & Optimization
+- [ ] Test all animations across device sizes (mobile, tablet, desktop)
+- [ ] Optimize shader performance and WebGL rendering
+- [ ] Validate smooth scroll and transition performance
+- [ ] Test accessibility with keyboard navigation and screen readers
+
+*Liquid Motion Phase started: 2026-01-24*
+
+---
+
+## Phase 5: Modern Restaurant Showcase with GSAP Scroll Engineering
+
+### Completed Implementation (2026-01-24)
+- [x] Create comprehensive restaurant data structure (7 venues across 4 properties)
+- [x] Develop restaurant constant data with nokrasCompanyInfo and restaurant details
+- [x] Build RestaurantCard component with parallax image and staggered animations
+- [x] Build RestaurantShowcase component with hero section and scroll animations
+- [x] Create BentoRestaurantShowcase component with magnetic hover effects
+- [x] Implement advanced GSAP animation utilities library (gsap-animations.ts)
+- [x] Create /restaurants page route with full showcase
+- [x] Implement scroll-triggered animations (fade-in, parallax, stagger)
+- [x] Add progress indicator with scroll tracking
+- [x] Create magnetic hover effects for interactive elements
+
+### Restaurant Data Structure
+- [x] 7 dining venues with comprehensive details
+  - Nokras Riverine: 3 restaurants (Riverside Cove, Sagana Social Lounge, Wellness Café)
+  - Nokras Enkare: 1 restaurant (Mount Ember Grill)
+  - Hotel Nokras Murang'a: 1 restaurant (The Murang'a Table)
+  - Nokras Silver Oak: 2 restaurants (Silver Skyline, Silver Standard Bar)
+- [x] Restaurant interface with cuisine, amenities, specialties, hours
+- [x] Price ranges, ratings, seating capacity, reservation requirements
+- [x] Operating hours, features, and chef information
+
+### GSAP Animation Features Implemented
+- [x] Pinned scale hero animation with text reveals
+- [x] Staggered restaurant card entrance animations
+- [x] Parallax image effects (variable speeds)
+- [x] Magnetic hover effects (cursor-following)
+- [x] RGB shift post-processing effects
+- [x] Text reveal animations (word/letter mode)
+- [x] Bento grid stagger animations
+- [x] Horizontal scroll gallery support
+- [x] Counter animations for statistics
+- [x] Custom useGsapAnimation hook for cleanup
+
+### UI/UX Components
+- [x] Hero section with animated title and CTA buttons
+- [x] Restaurant cards with image parallax and content reveal
+- [x] Progress indicator (animated dots)
+- [x] Responsive grid layouts (mobile-first)
+- [x] Interactive features grid (icons and labels)
+- [x] Footer CTA section
+- [x] Stats section with counters
+- [x] Bento grid with varied sizing and hover states
+
+### Pages Created
+- [x] /restaurants page with full showcase
+- [x] Responsive design for all screen sizes
+- [x] Metadata and SEO optimization
+
+### Next Steps for Enhancement
+- [ ] Add horizontal scroll gallery for restaurant image collections
+- [ ] Implement RGB shift effect on hover
+- [ ] Add video background support for hero sections
+- [ ] Create individual restaurant detail pages with menu displays
+- [ ] Implement reservation form integration
+- [ ] Add filter/search functionality
+- [ ] Create testimonials/review section
+- [ ] Add social media integration
+
+---
+
+## Phase 6: Comprehensive Design System & Animation Library (2026-01-24)
+
+### Completed Implementation
+- [x] Create design-system.ts with 25 animation patterns
+- [x] Document animation libraries (GSAP, Lenis, Locomotive Scroll)
+- [x] Create color palettes (Nokras Lux, Dark Modern, Natural Earth)
+- [x] Define animation timing standards (micro, standard, cinematic)
+- [x] Create easing function presets
+- [x] Update navbar with design system dropdown menu
+- [x] Create PersistentLayout component for persistent booking drawer
+- [x] Add "Book Now" floating button to all pages
+- [x] Create /design index page showcasing all 25 patterns
+- [x] Implement 3 design pattern template pages:
+  - [x] Hero Magnetic (Pattern #1)
+  - [x] Pinned Scale (Pattern #2)
+  - [x] Bento Grid Stagger (Pattern #7)
+- [x] Add custom CSS animations to globals.css
+- [x] Add animation delay utility classes
+- [x] Add GPU acceleration classes (.will-animate)
+- [x] Add prefers-reduced-motion accessibility support
+
+### Design System Documentation
+#### 25 Animation Patterns Documented:
+1. Hero Magnetic Cursor
+2. Pinned Scale Hero
+3. Liquid Blob Hero
+4. Staggered Card Cascade
+5. Horizontal Scroll Gallery
+6. Text Parallax Trail
+7. Bento Grid Stagger ✅
+8. Flip Card 3D
+9. Masonry with Cover Reveal
+10. Character Split Reveal
+11. Type Morph Animation
+12. SVG Text Path
+13. Curtain Slide Transition
+14. Liquid Wipe Transition
+15. Circular Reveal
+16. Progress Bar Organic
+17. Scroll Velocity Particle
+18. Background Parallax Depth
+19. Hover Ripple Effect
+20. Elastic Hover Bounce
+21. RGB Shift Chromatic Aberration
+22. Gradient Flow Animation
+23. Glassmorphism Blur Reveal
+24. Smooth Scroll with Inertia (Lenis)
+25. Locomotive Scroll Triggers
+
+### Navbar Updates
+- [x] Added /restaurants link
+- [x] Added /design system dropdown
+- [x] Design dropdown with links to all 10 featured patterns
+- [x] Mobile responsive dropdown menu
+
+### Persistent Booking System
+- [x] Created PersistentLayout component
+- [x] Added side drawer for booking panel
+- [x] Floating "Book Now" button (bottom right)
+- [x] Drawer toggle with backdrop overlay
+- [x] Smooth slide-in animation (translate-x)
+- [x] Close button functionality
+- [x] Responsive design (full width on mobile)
+
+### CSS Enhancements
+- [x] 8 custom keyframe animations
+- [x] Fade, slide (left/right/up), scale entrance effects
+- [x] Pulse glow and float animations
+- [x] Rotate slowly utility
+- [x] Animation delay utilities (0.1s - 0.5s)
+- [x] GPU acceleration support
+- [x] Reduced motion accessibility support
+
+### Pages Created
+- [x] /design (index with all 25 patterns)
+- [x] /design/hero-magnetic
+- [x] /design/pinned-scale
+- [x] /design/bento-grid
+
+### Next Steps for Design System Expansion
+- [ ] Create remaining 22 design pattern pages
+- [ ] Add interactive code examples for each pattern
+- [ ] Create copy-paste component library
+- [ ] Add performance benchmarking data
+- [ ] Create video tutorials for complex patterns
+- [ ] Implement pattern playground (real-time editor)
+- [ ] Add template starter packs
+- [ ] Create responsive behavior testing guide
+- [ ] Add cross-browser compatibility notes
+- [ ] Document best practices and common pitfalls
